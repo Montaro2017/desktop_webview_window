@@ -18,7 +18,6 @@ import 'src/webview_impl.dart';
 export 'src/create_configuration.dart';
 export 'src/title_bar.dart';
 export 'src/webview.dart';
-export 'src/cookie.dart';
 
 final List<WebviewImpl> _webviews = [];
 
