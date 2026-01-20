@@ -8,7 +8,7 @@ class WebviewCookie {
   final bool httpOnly;
   final bool sessionOnly;
 
-  WebviewCookie({
+  WebviewCookie._({
     required this.name,
     required this.value,
     required this.domain,
@@ -20,7 +20,7 @@ class WebviewCookie {
   });
 
   factory WebviewCookie.fromJson(Map<String, dynamic> json) {
-    return WebviewCookie(
+    return WebviewCookie._(
       name: json['name'],
       value: json['value'],
       domain: json['domain'],
