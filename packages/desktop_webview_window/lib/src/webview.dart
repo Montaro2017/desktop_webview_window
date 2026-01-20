@@ -13,6 +13,10 @@ typedef OnHistoryChangedCallback =
 /// [url] is the URL string.
 typedef OnUrlRequestCallback = bool Function(String url);
 
+/// Callback when WebView finishes loading a page.
+/// [url] is the URL string.
+typedef OnPageLoadedCallback = void Function(String url);
+
 /// Callback when WebView receives a web message
 /// [message] constains the webmessage
 typedef OnWebMessageReceivedCallback = void Function(String message);
@@ -84,6 +88,8 @@ abstract class Webview {
 
   void setOnUrlRequestCallback(OnUrlRequestCallback? callback);
 
+  void setOnPageLoadedCallback(OnPageLoadedCallback? callback);
+
   void addOnWebMessageReceivedCallback(OnWebMessageReceivedCallback callback);
 
   void removeOnWebMessageReceivedCallback(
@@ -105,4 +111,7 @@ abstract class Webview {
   Future<void> postWebMessageAsJson(String webMessage);
 
   Future<List<WebviewCookie>> getAllCookies();
+
+  /// get the current page source code.
+  Future<String> getHtml();
 }

@@ -227,6 +227,23 @@ void WebView::OnWebviewControllerCreated() {
             method_channel_->InvokeMethod(
                 "onNavigationCompleted",
                 std::make_unique<flutter::EncodableValue>(method_args));
+
+            BOOL isSuccess;
+            if (SUCCEEDED(args->get_IsSuccess(&isSuccess)) && isSuccess) {
+              wil::unique_cotaskmem_string uri;
+              sender->get_Source(&uri);
+              if (uri) {
+                auto loaded_args = flutter::EncodableMap{
+                    {flutter::EncodableValue("id"),
+                     flutter::EncodableValue(web_view_id_)},
+                    {flutter::EncodableValue("url"),
+                     flutter::EncodableValue(wide_to_utf8(uri.get()))},
+                };
+                method_channel_->InvokeMethod(
+                    "onPageLoaded",
+                    std::make_unique<flutter::EncodableValue>(loaded_args));
+              }
+            }
             return S_OK;
           })
           .Get(),

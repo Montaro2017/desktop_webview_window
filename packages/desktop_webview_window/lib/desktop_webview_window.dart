@@ -160,6 +160,14 @@ class WebviewWindow {
           'webViewId': viewId,
         });
         break;
+      case "onPageLoaded":
+        final url = args['url'] as String;
+        webview.notifyPageLoaded(url);
+        await _otherIsolateMessageHandler.invokeMethod('onPageLoaded', {
+          'webViewId': viewId,
+          'url': url,
+        });
+        break;
       default:
         return;
     }

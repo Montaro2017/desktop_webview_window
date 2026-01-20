@@ -116,6 +116,12 @@ class WebViewLayoutController: NSViewController {
         methodChannel.invokeMethod("onNavigationCompleted", arguments: [
           "id": viewId,
         ])
+        if let url = webView.url?.absoluteString {
+          methodChannel.invokeMethod("onPageLoaded", arguments: [
+            "id": viewId,
+            "url": url,
+          ])
+        }
       }
     }
   }

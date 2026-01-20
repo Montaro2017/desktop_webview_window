@@ -250,6 +250,15 @@ void WebviewWindow::OnLoadChanged(WebKitLoadEvent load_event) {
       fl_method_channel_invoke_method(FL_METHOD_CHANNEL(method_channel_),
                                       "onNavigationCompleted", args, nullptr,
                                       nullptr, nullptr);
+
+      auto *loaded_args = fl_value_new_map();
+      fl_value_set(loaded_args, fl_value_new_string("id"),
+                   fl_value_new_int(window_id_));
+      fl_value_set(loaded_args, fl_value_new_string("url"),
+                   fl_value_new_string(webkit_web_view_get_uri(WEBKIT_WEB_VIEW(webview_))));
+      fl_method_channel_invoke_method(FL_METHOD_CHANNEL(method_channel_),
+                                      "onPageLoaded", loaded_args, nullptr,
+                                      nullptr, nullptr);
       break;
     }
     default:

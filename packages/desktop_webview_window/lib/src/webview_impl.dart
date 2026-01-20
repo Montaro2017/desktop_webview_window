@@ -27,6 +27,8 @@ class WebviewImpl extends Webview {
 
   OnUrlRequestCallback? _onUrlRequestCallback;
 
+  OnPageLoadedCallback? _onPageLoadedCallback;
+
   final Set<OnWebMessageReceivedCallback> _onWebMessageReceivedCallbacks = {};
 
   WebviewImpl(this.viewId, this.channel);
@@ -67,6 +69,10 @@ class WebviewImpl extends Webview {
     } else {
       return true;
     }
+  }
+
+  void notifyPageLoaded(String url) {
+    _onPageLoadedCallback?.call(url);
   }
 
   void notifyWebMessageReceived(String message) {
@@ -250,6 +256,11 @@ class WebviewImpl extends Webview {
   }
 
   @override
+  void setOnPageLoadedCallback(OnPageLoadedCallback? callback) {
+    _onPageLoadedCallback = callback;
+  }
+
+  @override
   void addOnWebMessageReceivedCallback(OnWebMessageReceivedCallback callback) {
     _onWebMessageReceivedCallbacks.add(callback);
   }
@@ -312,5 +323,16 @@ class WebviewImpl extends Webview {
             ?.map((e) => WebviewCookie.fromJson(e.cast<String, dynamic>()))
             .toList() ??
         [];
+  }
+
+  @override
+  Future<String> getHtml() async {
+    final html = await evaluateJavaScript("document.documentElement.outerHTML");
+    if (html == null) return "";
+    try {
+      final decoded = json.decode(html);
+      if (decoded is String) return decoded;
+    } catch (_) {}
+    return html;
   }
 }

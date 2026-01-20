@@ -51,53 +51,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
-          actions: [
-            IconButton(
-              onPressed: () async {
-                final webview = await WebviewWindow.create(
-                  configuration: CreateConfiguration(
-                    windowHeight: 430,
-                    windowWidth: 932,
-                    title: "ExampleTestWindow",
-                    titleBarTopPadding: Platform.isMacOS ? 20 : 0,
-                    userDataFolderWindows: await _getWebViewPath(),
-                  ),
-                );
-
-                webview
-                  ..registerJavaScriptMessageHandler("test", (name, body) {
-                    debugPrint('on javaScipt message: $name $body');
-                  })
-                  ..setPromptHandler((prompt, defaultText) {
-                    if (prompt == "test") {
-                      return "Hello World!";
-                    } else if (prompt == "init") {
-                      return "initial prompt";
-                    }
-                    return "";
-                  })
-                  ..addScriptToExecuteOnDocumentCreated("""
-  const mixinContext = {
-    platform: 'Desktop',
-    conversation_id: 'conversationId',
-    immersive: false,
-    app_version: '1.0.0',
-    appearance: 'dark',
-  }
-  window.MixinContext = {
-    getContext: function() {
-      return JSON.stringify(mixinContext)
-    }
-  }
-""")
-                  ..setUserAgent(
-                      "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
-                  ..launch("http://localhost:3000/test.html");
-              },
-              icon: const Icon(Icons.bug_report),
-            )
-          ],
+          title: const Text('Plugin example app')
         ),
         body: Center(
           child: Padding(
@@ -137,24 +91,6 @@ class _MyAppState extends State<MyApp> {
         titleBarTopPadding: Platform.isMacOS ? 20 : 0,
       ),
     );
-
-    final timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      try {
-        final cookies = await webview.getAllCookies();
-
-        if (cookies.isEmpty) {
-          debugPrint('⚠️ no cookies found');
-        }
-
-        for (final cookie in cookies) {
-          debugPrint('cookie: ${cookie.toJson()}');
-        }
-      } catch (e, stack) {
-        debugPrint('getAllCookies error: $e');
-        debugPrintStack(stackTrace: stack);
-      }
-    });
-
     webview
       ..setUserAgent(
           "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36")
@@ -170,20 +106,30 @@ class _MyAppState extends State<MyApp> {
         // grant navigation request
         return true;
       })
-      ..openDevToolsWindow()
+      ..setOnPageLoadedCallback((url) {
+        webview.getHtml().then((html) {
+          if (!html.contains("ray-id")) {
+            debugPrint("cloudflare pass!");
+          }
+        });
+        webview.getAllCookies().then((cookies) {
+          debugPrint("$cookies");
+        });
+      })
+      // ..openDevToolsWindow()
       ..onClose.whenComplete(() {
         debugPrint("on close");
-        timer.cancel();
+        // timer.cancel();
       });
-    await Future.delayed(const Duration(seconds: 2));
-    for (final javaScript in _javaScriptToEval) {
-      try {
-        final ret = await webview.evaluateJavaScript(javaScript);
-        debugPrint('evaluateJavaScript: $ret');
-      } catch (e) {
-        debugPrint('evaluateJavaScript error: $e \n $javaScript');
-      }
-    }
+    // await Future.delayed(const Duration(seconds: 2));
+    // for (final javaScript in _javaScriptToEval) {
+    //   try {
+    //     final ret = await webview.evaluateJavaScript(javaScript);
+    //     debugPrint('evaluateJavaScript: $ret');
+    //   } catch (e) {
+    //     debugPrint('evaluateJavaScript error: $e \n $javaScript');
+    //   }
+    // }
   }
 }
 
