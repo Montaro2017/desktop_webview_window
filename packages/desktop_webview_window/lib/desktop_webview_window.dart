@@ -15,10 +15,10 @@ import 'src/message_channel.dart';
 import 'src/webview.dart';
 import 'src/webview_impl.dart';
 
+export 'src/cookie.dart';
 export 'src/create_configuration.dart';
 export 'src/title_bar.dart';
 export 'src/webview.dart';
-export 'src/cookie.dart';
 
 final List<WebviewImpl> _webviews = [];
 
@@ -171,6 +171,13 @@ class WebviewWindow {
         break;
       default:
         return;
+    }
+  }
+
+  static void closeAll() async {
+    final webViews = _webviews.cast<WebviewImpl?>();
+    for (var webview in webViews) {
+      webview?.close();
     }
   }
 
