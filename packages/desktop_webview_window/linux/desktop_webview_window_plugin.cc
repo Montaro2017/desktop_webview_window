@@ -262,7 +262,24 @@ static void webview_window_plugin_handle_method_call(
                                    nullptr);
       return;
     }
-    self->windows->at(window_id)->Close();
+    // Call CloseWithCallback to notify Flutter first
+    self->windows->at(window_id)->CloseWithCallback();
+    fl_method_call_respond_success(method_call, nullptr, nullptr);
+  } else if (strcmp(method, "destroyWindow") == 0) {
+    auto *args = fl_method_call_get_args(method_call);
+    if (fl_value_get_type(args) != FL_VALUE_TYPE_MAP) {
+      fl_method_call_respond_error(method_call, "0", "destroyWindow args is not map",
+                                   nullptr, nullptr);
+      return;
+    }
+    auto window_id = fl_value_get_int(fl_value_lookup_string(args, "viewId"));
+    if (!self->windows->count(window_id)) {
+      fl_method_call_respond_error(method_call, "0",
+                                   "can not found webview for viewId", nullptr,
+                                   nullptr);
+      return;
+    }
+    self->windows->at(window_id)->DestroyWindow();
     fl_method_call_respond_success(method_call, nullptr, nullptr);
   } else if (strcmp(method, "evaluateJavaScript") == 0) {
     auto *args = fl_method_call_get_args(method_call);

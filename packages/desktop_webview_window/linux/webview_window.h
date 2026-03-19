@@ -62,6 +62,10 @@ class WebviewWindow {
 
   void UnregisterJavaScriptChannel(const std::string &name);
 
+  void CloseWithCallback();
+
+  void DestroyWindow();
+
  private:
   FlMethodChannel *method_channel_;
   int64_t window_id_;
@@ -74,6 +78,8 @@ class WebviewWindow {
   GtkBox *box_ = nullptr;
 
   std::unordered_map<std::string, gulong> js_channel_handler_ids_;
+
+  bool is_closing_ = false;
 };
 
 #endif  // WEBVIEW_WINDOW_LINUX_WEBVIEW_WINDOW_H_

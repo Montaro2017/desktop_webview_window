@@ -116,6 +116,15 @@ class _MyAppState extends State<MyApp> {
           debugPrint("$cookies");
         });
       })
+      // Test beforeClose callback
+      ..setBeforeCloseCallback(() async {
+        debugPrint('beforeClose callback triggered');
+        // Simulate async operation (e.g., save data, show confirmation dialog)
+        await Future.delayed(const Duration(seconds: 1));
+        debugPrint('beforeClose callback completed');
+        // Return true to allow close, false to prevent close
+        return true;
+      })
       // ..openDevToolsWindow()
       ..onClose.whenComplete(() {
         debugPrint("on close");

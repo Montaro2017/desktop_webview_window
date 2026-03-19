@@ -64,6 +64,10 @@ class WebviewWindow {
 
   void getPositionalParameters(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> completer);
 
+  void Close();
+
+  void DestroyWindow();
+
   [[nodiscard]] const std::unique_ptr<webview_window::WebView> &GetWebView() const {
     return web_view_;
   }
@@ -90,6 +94,8 @@ class WebviewWindow {
   bool destroyed_ = false;
 
   int title_bar_height_;
+
+  bool is_closing_ = false;
 
   // Processes and route salient window messages for mouse handling,
   // size change and DPI. Delegates handling of these to member overloads that

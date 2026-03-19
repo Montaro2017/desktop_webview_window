@@ -155,6 +155,19 @@ void WebviewWindow::bringToForeground(bool maximized) {
   }
 }
 
+void WebviewWindow::Close() {
+  if (hwnd_) {
+    ::SendMessage(hwnd_.get(), WM_CLOSE, 0, 0);
+  }
+}
+
+void WebviewWindow::DestroyWindow() {
+  if (hwnd_ && !is_closing_) {
+    is_closing_ = true;
+    ::DestroyWindow(hwnd_.get());
+  }
+}
+
 void WebviewWindow::getPositionalParameters(std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> completer) {
   RECT rc;
   GetWindowRect(hwnd_.get(), &rc);
@@ -207,6 +220,18 @@ WebviewWindow::MessageHandler(
   }
 
   switch (message) {
+    case WM_CLOSE: {
+      // Handle close button click - notify Flutter and wait for response
+      // Don't destroy window here, let Flutter handle it and call destroyWindow
+      auto args = flutter::EncodableMap{
+          {flutter::EncodableValue("id"), flutter::EncodableValue(window_id_)}
+      };
+      method_channel_->InvokeMethod(
+          "onBeforeClose",
+          std::make_unique<flutter::EncodableValue>(args),
+          nullptr);
+      return 0;
+    }
     case WM_DESTROY: {
       flutter_action_bar_.reset();
       web_view_.reset();

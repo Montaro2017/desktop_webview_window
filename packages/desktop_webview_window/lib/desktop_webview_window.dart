@@ -112,6 +112,14 @@ class WebviewWindow {
       return;
     }
     switch (call.method) {
+      case "onBeforeClose":
+        // Handle close button click - execute beforeClose callback
+        final canClose = await webview.invokeBeforeCloseCallback();
+        if (canClose) {
+          // Call destroyWindow to actually close
+          await webview.destroyWindow();
+        }
+        return canClose;
       case "onWindowClose":
         _webviews.remove(webview);
         webview.onClosed();

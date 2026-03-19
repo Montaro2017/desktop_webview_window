@@ -12,6 +12,8 @@ import WebKit
 class WebviewWindowController: NSWindowController {
   private let methodChannel: FlutterMethodChannel
 
+  private var isClosing = false
+
   private let viewId: Int64
 
   private let width, height: Int
@@ -74,6 +76,12 @@ class WebviewWindowController: NSWindowController {
     window = nil
   }
 
+  func destroyWindow() {
+    // Close the window and trigger windowShouldClose -> windowWillClose
+    isClosing = true
+    window?.performClose(nil)
+  }
+
   func setAppearance(brightness: Int) {
     switch brightness {
     case 0:
@@ -100,6 +108,13 @@ class WebviewWindowController: NSWindowController {
 }
 
 extension WebviewWindowController: NSWindowDelegate {
+  func windowShouldClose(_ sender: NSWindow) -> Bool {
+    // Notify Flutter to handle close (includes beforeClose callback)
+    methodChannel.invokeMethod("onBeforeClose", arguments: ["id": viewId])
+    // Don't close here, let Flutter handle it and call destroyWindow
+    return false
+  }
+
   func windowWillClose(_ notification: Notification) {
     webViewController.destroy()
     methodChannel.invokeMethod("onWindowClose", arguments: ["id": viewId])

@@ -21,6 +21,11 @@ typedef OnPageLoadedCallback = void Function(String url);
 /// [message] constains the webmessage
 typedef OnWebMessageReceivedCallback = void Function(String message);
 
+/// Callback before WebView window close.
+/// Return true to allow close, return false to prevent close.
+/// This callback is called when the user clicks the close button or close() is called.
+typedef BeforeCloseCallback = Future<bool> Function();
+
 abstract class Webview {
   Future<void> get onClose;
 
@@ -100,6 +105,11 @@ abstract class Webview {
 
   /// Close the web view window.
   void close();
+
+  /// Set a callback that will be invoked before the window closes.
+  /// The callback should return true to allow close, or false to prevent close.
+  /// This callback is called when the user clicks the close button or close() is called.
+  void setBeforeCloseCallback(BeforeCloseCallback? callback);
 
   /// evaluate JavaScript in the web view.
   Future<String?> evaluateJavaScript(String javaScript);

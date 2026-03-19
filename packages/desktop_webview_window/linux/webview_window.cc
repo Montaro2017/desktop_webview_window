@@ -106,20 +106,29 @@ WebviewWindow::WebviewWindow(FlMethodChannel *method_channel, int64_t window_id,
   g_object_ref(method_channel_);
 
   window_ = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  g_signal_connect(G_OBJECT(window_), "destroy",
-                   G_CALLBACK(+[](GtkWidget *, gpointer arg) {
+
+  // Use delete-event to intercept close button click
+  g_signal_connect(G_OBJECT(window_), "delete-event",
+                   G_CALLBACK(+[](GtkWidget *, GdkEvent *event, gpointer arg) {
                      auto *window = static_cast<WebviewWindow *>(arg);
-                     if (window->on_close_callback_) {
-                       window->on_close_callback_();
+                     if (window->is_closing_) {
+                       return FALSE;  // Allow close
                      }
+                     // Notify Flutter to handle close (includes beforeClose callback)
                      auto *args = fl_value_new_map();
                      fl_value_set(args, fl_value_new_string("id"),
                                   fl_value_new_int(window->window_id_));
                      fl_method_channel_invoke_method(
                          FL_METHOD_CHANNEL(window->method_channel_),
-                         "onWindowClose", args, nullptr, nullptr, nullptr);
+                         "onBeforeClose", args,
+                         nullptr,
+                         nullptr,
+                         nullptr);
+                     // Don't close here, let Dart handle it and call destroyWindow
+                     return TRUE;  // TRUE to prevent close
                    }),
                    this);
+
   gtk_window_set_title(GTK_WINDOW(window_), title.c_str());
   gtk_window_set_default_size(GTK_WINDOW(window_), width, height);
   gtk_window_set_position(GTK_WINDOW(window_), GTK_WIN_POS_CENTER);
@@ -214,6 +223,36 @@ void WebviewWindow::SetUserAgent(
 }
 
 void WebviewWindow::Close() { gtk_window_close(GTK_WINDOW(window_)); }
+
+void WebviewWindow::CloseWithCallback() {
+  // First notify Flutter that window is about to close
+  auto *args = fl_value_new_map();
+  fl_value_set(args, fl_value_new_string("id"),
+               fl_value_new_int(window_id_));
+  fl_method_channel_invoke_method(
+      FL_METHOD_CHANNEL(method_channel_),
+      "onBeforeClose", args,
+      nullptr,
+      nullptr,
+      nullptr);
+  // Don't close here, let Dart handle it and call destroyWindow when ready
+}
+
+void WebviewWindow::DestroyWindow() {
+  if (!is_closing_) {
+    is_closing_ = true;
+    if (on_close_callback_) {
+      on_close_callback_();
+    }
+    auto *args = fl_value_new_map();
+    fl_value_set(args, fl_value_new_string("id"),
+                 fl_value_new_int(window_id_));
+    fl_method_channel_invoke_method(
+        FL_METHOD_CHANNEL(method_channel_),
+        "onWindowClose", args, nullptr, nullptr, nullptr);
+    gtk_widget_destroy(window_);
+  }
+}
 
 void WebviewWindow::OnLoadChanged(WebKitLoadEvent load_event) {
   // notify history changed event.

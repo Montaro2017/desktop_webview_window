@@ -31,6 +31,8 @@ class WebviewImpl extends Webview {
 
   final Set<OnWebMessageReceivedCallback> _onWebMessageReceivedCallbacks = {};
 
+  BeforeCloseCallback? _beforeCloseCallback;
+
   WebviewImpl(this.viewId, this.channel);
 
   @override
@@ -278,11 +280,32 @@ class WebviewImpl extends Webview {
   }
 
   @override
-  void close() {
+  void setBeforeCloseCallback(BeforeCloseCallback? callback) {
+    _beforeCloseCallback = callback;
+  }
+
+  /// Internal method to invoke beforeClose callback. Called by desktop_webview_window.dart
+  Future<bool> invokeBeforeCloseCallback() async {
+    if (_beforeCloseCallback != null) {
+      return await _beforeCloseCallback!();
+    }
+    return true;
+  }
+
+  @override
+  void close() async {
     if (_closed) {
       return;
     }
+    // Notify native to trigger beforeClose callback, then native will call destroyWindow
     channel.invokeMethod("close", {"viewId": viewId});
+  }
+
+  Future<void> destroyWindow() async {
+    if (_closed) {
+      return;
+    }
+    channel.invokeMethod("destroyWindow", {"viewId": viewId});
   }
 
   @override
